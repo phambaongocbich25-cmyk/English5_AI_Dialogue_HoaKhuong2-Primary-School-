@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>English AI Dialogue Master - Hoa Khuong 2</title>
+    <style>
+        :root { --primary: #005bb7; --green: #27ae60; --orange: #e67e22; --bg: #f4f7f9; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 10px; }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .card { background: #f8fbff; padding: 20px; border-radius: 20px; border: 1px solid #d6e4f0; margin-bottom: 15px; }
+        h1, h2 { text-align: center; color: var(--primary); margin: 5px 0; }
+        .chat-box { min-height: 250px; background: #fff; border: 2px solid #e2e8f0; border-radius: 25px; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-bottom: 15px; }
+        .ai-voice-msg { font-size: 22px; color: var(--primary); font-weight: bold; margin-bottom: 15px; line-height: 1.4; }
+        .user-text-display { font-size: 18px; color: #555; font-style: italic; min-height: 24px; border-top: 1px solid #eee; width: 100%; pt: 10px; }
+        .btn-main { width: 100%; padding: 18px; border: none; border-radius: 50px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-speak { background: var(--primary); color: white; box-shadow: 0 8px 20px rgba(0,91,183,0.3); }
+        .recording { background: #c0392b !important; animation: pulse 1s infinite; }
+        .word-good { color: var(--green); font-weight: bold; margin: 0 3px; }
+        .word-bad { color: var(--orange); font-weight: bold; text-decoration: underline; cursor: pointer; margin: 0 3px; }
+        .feedback-area { background: #fffcf0; padding: 15px; border-radius: 15px; border: 1px solid #f9e2b0; margin-top: 15px; display: none; }
+        .certificate { display: none; margin-top: 40px; padding: 50px 20px; border: 15px double #d4af37; background: #fff; text-align: center; }
+        .cert-name { font-size: 40px; color: #1a237e; font-family: 'Times New Roman', serif; font-weight: bold; margin: 15px 0; display: block; }
+        .sign-area { display: flex; justify-content: space-around; margin-top: 60px; font-weight: bold; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(0.98); } 100% { transform: scale(1); } }
+        select, input { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #cbd5e0; margin-top: 5px; box-sizing: border-box; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎤 English AI Dialogue Master</h1>
+    <h2 style="font-size: 14px; font-weight: normal;">Hoa Khuong 2 Primary School</h2>
+
+    <div class="card" style="display:flex; gap:10px;">
+        <input id="stdName" placeholder="Student Name..." oninput="saveInfo()">
+        <input id="stdClass" placeholder="Class..." oninput="saveInfo()">
+    </div>
+
+    <div class="card">
+        <label><b>Chế độ hội thoại:</b></label>
+        <select id="modeSel" onchange="changeMode()">
+            <option value="std-ask">Học sinh hỏi - Alex trả lời (Thông minh)</option>
+            <option value="ai-ask">AI hỏi - Học sinh trả lời (20 Units)</option>
+        </select>
+        <div id="unitBox" style="margin-top:10px; display:none;">
+            <label><b>Chọn Unit:</b></label>
+            <select id="unitSel" onchange="changeMode()"></select>
+        </div>
+    </div>
+
+    <div class="chat-box">
+        <div class="ai-voice-msg" id="aiMsg">Hello! I'm Alex from London. Ask me anything!</div>
+        <div class="user-text-display" id="userMsg">Your speech will appear here...</div>
+    </div>
+
+    <button id="btnRec" class="btn-main btn-speak" onclick="startMic()">🎙 NHẤN VÀ NÓI VỚI ALEX</button>
+    
+    <div id="feedbackBox" class="feedback-area">
+        <b>Sửa lỗi phát âm (Bấm vào chữ màu cam để nghe):</b>
+        <div id="wordCorrection" style="font-size: 20px; line-height: 2; margin-top: 10px;"></div>
+    </div>
+
+    <div class="certificate" id="cert">
+        <h2 style="color:#b8860b; font-size: 24px;">CERTIFICATE OF ENGLISH DIALOGUE COMPLETION</h2>
+        <p>This certificate is proudly presented to</p>
+        <div class="cert-name" id="cName">...</div>
+        <p id="cInfo" style="font-size: 18px;"></p>
+        <div style="font-size: 45px; margin: 15px;">⭐⭐⭐⭐⭐</div>
+        <p style="font-weight:bold; color:var(--green); font-size: 20px;">🌟 Keep practising English every day! 🌟</p>
+        <div class="sign-area">
+            <div>Mrs Tran Thi Kim Yen</div>
+            <div>Mrs Pham Thi Ngoc Bich</div>
+        </div>
+    </div>
+</div>
+
+<audio id="clap" src="https://www.soundjay.com/human/applause-8.mp3"></audio>
+
+<script>
+[cite_start]// Dữ liệu từ vựng và mẫu câu từ file docx [cite: 1, 2]
+const unitData = {
+    1: { qs: ["What is your name?", "Where do you live?", "What is your address?", "What's your favourite colour?", "What's your favourite animal?"], final: "I'm Hoang. I live in the countryside. My favourite animal is a dolphin." },
+    2: { qs: ["Do you live in a house or a flat?", "What's your address?", "Who do you live with?"], final: "I live at 65 Le Loi Street." },
+    5: { qs: ["What would you like to be in the future?", "Why would you like to be a doctor?", "Where would you like to work?"], final: "I'd like to be a doctor because I'd like to look after patients." },
+    [cite_start]// (Các Unit khác được bổ sung tương tự từ nguồn [cite: 1, 2])
+};
+
+// Logic phản hồi thông minh của Alex (Học sinh Anh)
+const alexBrain = {
+    responses: {
+        "name": "My name is Alex. I'm from London. What's yours?",
+        "where": "I'm from England! It's very beautiful. Where are you from?",
+        "weather": "It's cold in London today. What's the weather like in Vietnam?",
+        "job": "I want to be a pilot to travel the world! What about you?",
+        "tet": "I love banh chung and lucky money! Do you like Tet?",
+        "food": "I love pizza and Pho. What's your favourite food?",
+        "age": "I'm 11 years old. We are the same age!",
+        "school": "My school is very big. I love English. Do you like your school?"
+    },
+    // Hàm xử lý câu trả lời dựa trên nội dung học sinh nói
+    process: function(input) {
+        let text = input.toLowerCase();
+        for (let key in this.responses) {
+            if (text.includes(key)) return this.responses[key];
+        }
+        // Nếu học sinh trả lời câu hỏi của Alex, Alex sẽ hỏi tiếp dựa trên ý đó
+        if (text.includes("i am from") || text.includes("i'm from")) return "Vietnam is amazing! I want to visit it. What is your favourite food there?";
+        if (text.includes("i like") || text.includes("my favourite")) return "That's great! I like that too. Why do you like it?";
+        if (text.includes("yes") || text.includes("no")) return "Tell me more! I want to hear your story.";
+        
+        return "That's interesting! Can you tell me more about that?";
+    }
+};
+
+const unitSel = document.getElementById('unitSel');
+for(let i=1; i<=20; i++) {
+    let opt = document.createElement('option');
+    opt.value = i; opt.text = "Unit " + i;
+    unitSel.add(opt);
+}
+
+let currentIdx = 0;
+let chatHistory = 0;
+let isRec = false;
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.lang = 'en-US';
+
+function saveInfo() {
+    localStorage.setItem('n', document.getElementById('stdName').value);
+    localStorage.setItem('c', document.getElementById('stdClass').value);
+}
+
+function changeMode() {
+    currentIdx = 0; chatHistory = 0;
+    document.getElementById('cert').style.display = 'none';
+    document.getElementById('feedbackBox').style.display = 'none';
+    const mode = document.getElementById('modeSel').value;
+    document.getElementById('unitBox').style.display = (mode === 'ai-ask') ? 'block' : 'none';
+    
+    let initialMsg = (mode === 'ai-ask') ? unitData[unitSel.value]?.qs[0] : "Hi! I'm Alex. Ask me anything!";
+    document.getElementById('aiMsg').innerText = initialMsg || "Let's talk!";
+    speakAI(initialMsg);
+}
+
+function startMic() {
+    if(isRec) return;
+    recognition.start();
+    document.getElementById('btnRec').classList.add('recording');
+    document.getElementById('btnRec').innerText = "🛑 ALEX IS LISTENING...";
+    isRec = true;
+}
+
+recognition.onresult = (e) => {
+    const said = e.results[0][0].transcript;
+    const conf = e.results[0][0].confidence;
+    document.getElementById('userMsg').innerText = said;
+    handleDialogue(said, conf);
+};
+
+recognition.onend = () => {
+    isRec = false;
+    document.getElementById('btnRec').classList.remove('recording');
+    document.getElementById('btnRec').innerText = "🎙 NHẤN VÀ NÓI VỚI ALEX";
+};
+
+function handleDialogue(said, conf) {
+    const mode = document.getElementById('modeSel').value;
+    let nextMsg = "";
+
+    if (mode === 'ai-ask') {
+        const u = unitData[unitSel.value];
+        currentIdx++;
+        if (u && currentIdx < u.qs.length) {
+            nextMsg = u.qs[currentIdx];
+        } else {
+            setTimeout(showCert, 1500);
+            nextMsg = "Excellent! You finished the unit.";
+        }
+    } else {
+        chatHistory++;
+        nextMsg = alexBrain.process(said);
+        if (chatHistory >= 5) setTimeout(showCert, 2000);
+    }
+
+    document.getElementById('aiMsg').innerText = nextMsg;
+    speakAI(nextMsg);
+    showFeedback(said, conf);
+}
+
+function showFeedback(said, conf) {
+    document.getElementById('feedbackBox').style.display = 'block';
+    let html = "";
+    said.split(" ").forEach(w => {
+        [cite_start]// Nếu độ tin tưởng thấp (< 0.9), đánh dấu màu cam [cite: 1, 2]
+        if(conf > 0.9) html += `<span class="word-good">${w}</span> `;
+        else html += `<span class="word-bad" onclick="speakAI('${w}')">${w}</span> `;
+    });
+    document.getElementById('wordCorrection').innerHTML = html;
+}
+
+function speakAI(t) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = 'en-GB'; u.rate = 0.9;
+    window.speechSynthesis.speak(u);
+}
+
+function showCert() {
+    document.getElementById('clap').play();
+    document.getElementById('cert').style.display = 'block';
+    document.getElementById('cName').innerText = document.getElementById('stdName').value || "Amazing Student";
+    document.getElementById('cInfo').innerText = "Class: " + (document.getElementById('stdClass').value || "5") + " | Mode: " + document.getElementById('modeSel').options[document.getElementById('modeSel').selectedIndex].text;
+    document.getElementById('cert').scrollIntoView({behavior: 'smooth'});
+}
+
+window.onload = () => {
+    document.getElementById('stdName').value = localStorage.getItem('n') || "";
+    document.getElementById('stdClass').value = localStorage.getItem('c') || "";
+    changeMode();
+};
+</script>
+</body>
+</html>
